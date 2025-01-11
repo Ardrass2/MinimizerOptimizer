@@ -1,5 +1,5 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef GRAPH_H_
+#define GRAPH_H_
 
 #include <iostream>
 #include <unordered_map>
@@ -10,24 +10,24 @@
 #include "Politicians.h"
 #include "GraphObjects.h"
 
+#define GRAPH_TEMPLATE_PARAMS \
+    typename VertexType, \
+    typename WeightType = double, \
+    typename DirectedPolicyType = UndirectedPolicy, \
+    typename WeightedPolicyType = UnweightedPolicy
 
-template <
-        typename VertexType,
-        typename WeightType = double,
-        typename DirectedPolicyType = UndirectedPolicy,
-        typename WeightedPolicyType = UnweightedPolicy
-        >
+
+template <GRAPH_TEMPLATE_PARAMS>
 class Graph :
         private DirectedPolicyType,
         private WeightedPolicyType {
 
-    using Edge = Edge<VertexType, WeightType>;
+    using EdgeType = Edge<VertexType, WeightType>;
     
 private:
-
     std::unordered_set<VertexType> _vertices;
 
-    std::unordered_map<VertexType, std::vector<Edge>> _adjacencyList;
+    std::unordered_map<VertexType, std::vector<EdgeType>> _adjacencyList;
 
 protected:
     void DFS(const VertexType& v, std::unordered_set<VertexType>& visited, std::vector<VertexType>& component) const {
@@ -51,7 +51,7 @@ public:
         (void)std::initializer_list<int>{
                 (
                     _vertices.insert(vertex),
-                    _adjacencyList.emplace(vertex, std::vector<Edge>{}),
+                    _adjacencyList.emplace(vertex, std::vector<EdgeType>{}),
                     0
                 )...
         };
@@ -71,7 +71,7 @@ public:
         for (auto& [vertex, edges] : _adjacencyList) {
             edges.erase(
                     std::remove_if(edges.begin(), edges.end(),
-                                   [&](const Edge& edge) { return edge.to == v; }),
+                                   [&](const EdgeType& edge) { return edge.to == v; }),
                     edges.end()
             );
         }
@@ -113,7 +113,7 @@ public:
         size_t originalSize = fromEdges.size();
         fromEdges.erase(
                 std::remove_if(fromEdges.begin(), fromEdges.end(),
-                               [&](const Edge& edge) { return edge.to == to; }),
+                               [&](const EdgeType& edge) { return edge.to == to; }),
                 fromEdges.end()
         );
         if (fromEdges.size() != originalSize) {
@@ -126,7 +126,7 @@ public:
             originalSize = toEdges.size();
             toEdges.erase(
                     std::remove_if(toEdges.begin(), toEdges.end(),
-                                   [&](const Edge& edge) { return edge.to == from; }),
+                                   [&](const EdgeType& edge) { return edge.to == from; }),
                     toEdges.end()
             );
             if (toEdges.size() != originalSize) {
@@ -180,20 +180,20 @@ public:
                     }
                 }
             }
-            throw std::invalid_argument("Edge does not exist.");
+            throw std::invalid_argument("EdgeType does not exist.");
         }
         throw std::invalid_argument("One or both vertices do not exist.");
     }
 
     // TODO test and Imp
-    std::vector<Edge> getAllEdges() const {
-        std::unordered_set<Edge> targetEdges;
+    std::vector<EdgeType> getAllEdges() const {
+        std::unordered_set<EdgeType> targetEdges;
         for (const auto& [vertex, edges] : _adjacencyList) {
             for (const auto& edge : edges) {
                 targetEdges.emplace(edge);
             }
         }
-        return std::vector<Edge>(targetEdges.begin(), targetEdges.end());
+        return std::vector<EdgeType>(targetEdges.begin(), targetEdges.end());
     }
 
     bool isDirected() const {
@@ -217,7 +217,7 @@ public:
         auto it = _adjacencyList.find(from);
         if (it != _adjacencyList.end()) {
             return std::any_of(it->second.begin(), it->second.end(),
-                               [&](const Edge& e) { return e.to == to; });
+                               [&](const EdgeType& e) { return e.to == to; });
         }
         return false;
     }
@@ -227,12 +227,12 @@ public:
     };
 
     // TODO test and Imp
-    std::unordered_map<VertexType, std::vector<Edge>> getAdjacencyList() const {
+    std::unordered_map<VertexType, std::vector<EdgeType>> getAdjacencyList() const {
         return _adjacencyList;
     }
 
     // TODO test and Imp
-    std::vector<Edge> getVertexEdges(const VertexType& v) const {
+    std::vector<EdgeType> getVertexEdges(const VertexType& v) const {
         auto it = _adjacencyList.find(v);
         if (it != _adjacencyList.end()) {
             return it->second;
@@ -338,4 +338,4 @@ public:
     // Maybe next: graph iterators
 };
 
-#endif // ! GRAPH_H
+#endif // ! GRAPH_H_
